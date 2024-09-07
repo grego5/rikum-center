@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ticket Info</title>
+    <style>
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        display: flex;
+        justify-content: center;
+        background-color: #aaa;
+      }
+      main {
+        border-radius: 20px;
+        margin-top: 20px;
+        padding: 20px;
+        min-width: 800px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        background-color: #fff;
+      }
+      table {
+        border-collapse: collapse;
+      }
+      table,
+      th,
+      td {
+        border: 1px solid black;
+        padding: 8px;
+      }
+      caption {
+        padding: 8px;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+      .data-view {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .view-group {
+        display: flex;
+        gap: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <form
+        id="uploadForm"
+        action="/upload"
+        method="post"
+        enctype="multipart/form-data"
+      >
+        <input type="file" name="files" accept=".pdf" required multiple />
+        <button type="submit">Upload</button>
+      </form>
+
+      <h1>Ticket Information</h1>
+
+      <div class="data-view" id="data-view"></div>
+    </main>
+
+    <script>
+      const dataView = document.getElementById('data-view');
+
+      document.getElementById('uploadForm').onsubmit = async function (event) {
+        event.preventDefault();
+
+        const formData = new FormData(this);
+        const response = await fetch('/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log(data);
+
+          dataView.innerHTML = '';
+
+          data.forEach((dataset) => {
+            const viewGoup = document.createElement('div');
+            viewGoup.classList.add('view-group');
+
+            viewGoup.appendChild(
+              createTable(dataset.ticket, 'Ticket Information')
+            );
+            viewGoup.appendChild(
+              createTable(dataset.device, 'Device Information')
+            );
+            viewGoup.appendChild(
+              createTable(dataset.invitee, 'Invitee Information')
+            );
+            viewGoup.appendChild(
+              createTable(dataset.customer, 'Customer Information')
+            );
+
+            dataView.appendChild(viewGoup);
+          });
+        } else {
+          dataView.innerHTML = 'Error uploading file';
+        }
+      };
+
+      function createTable(data, title) {
+        const table = document.createElement('table');
+        const caption = document.createElement('caption');
+        caption.textContent = title;
+        table.appendChild(caption);
+
+        Object.keys(data).forEach((key) => {
+          const row = document.createElement('tr');
+          const cellKey = document.createElement('th');
+          cellKey.textContent = key;
+          row.appendChild(cellKey);
+
+          const cellValue = document.createElement('td');
+          if (Array.isArray(data[key])) {
+            cellValue.textContent = data[key].join(', ') || 'N/A';
+          } else {
+            cellValue.textContent = data[key] || 'N/A';
+          }
+          row.appendChild(cellValue);
+
+          table.appendChild(row);
+        });
+
+        return table;
+      }
+    </script>
+  </body>
+</html>
