@@ -1,4 +1,3 @@
-import os from 'os';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -9,10 +8,17 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const popplerPath = path.join(__dirname, '..', process.env.POPPLER_PATH || '');
 
-console.log(__dirname);
-console.log(path.join(__dirname, 'lib'));
-console.log(path.join(__dirname, '..', '..'));
-console.log(popplerPath);
+const child = spawn(popplerPath, ['-version'], { stdio: 'inherit' });
+child.on('error', (err) => {
+  console.error('Failed to start subprocess:', err);
+});
+child.on('close', (code) => {
+  if (code !== 0) {
+    console.error(`Subprocess exited with code ${code}`);
+  } else {
+    console.log('Subprocess completed successfully');
+  }
+});
 
 type Options = Partial<{
   firstPageToConvert: number;
